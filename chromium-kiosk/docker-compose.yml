@@ -1,0 +1,17 @@
+services:
+  kiosk:
+    build: .
+    image: alpine-chromium-kiosk:latest
+    container_name: alpine-chromium-kiosk
+    env_file:
+      - kiosk.env
+    ports:
+      - "5900:5900"   # VNC (Xvnc)
+      - "6080:6080"   # noVNC (optional, standalone only)
+    shm_size: "512m"
+    restart: "no"
+    volumes:
+      - kiosk-home:/home/app
+
+volumes:
+  kiosk-home:
