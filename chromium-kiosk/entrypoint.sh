@@ -41,6 +41,9 @@ IDLE_TIMEOUT_SECONDS="${IDLE_TIMEOUT_SECONDS:-300}"
 IDLE_CHECK_SECONDS="${IDLE_CHECK_SECONDS:-5}"
 IDLE_RESET_COOLDOWN_SECONDS="${IDLE_RESET_COOLDOWN_SECONDS:-60}"
 
+# NEW: force VNC bind address (critical when running pulled image)
+VNC_BIND_ADDRESS="${VNC_BIND_ADDRESS:-0.0.0.0}"
+
 # -----------------------------
 # Paths
 # -----------------------------
@@ -95,8 +98,6 @@ rm -f "${SESSION_SOCK}" "${SESSION_PIDFILE}" >/dev/null 2>&1 || true
 SESSION_BUS_ADDR="unix:path=${SESSION_SOCK}"
 log "Starting DBus session bus at ${SESSION_BUS_ADDR}"
 
-# Try with --pidfile (some builds support it). If it fails to create a socket,
-# we fall back to a simpler invocation.
 dbus-daemon --session \
   --address="${SESSION_BUS_ADDR}" \
   --fork \
@@ -107,13 +108,11 @@ DBUS_SESSION_PID="$(cat "${SESSION_PIDFILE}" 2>/dev/null || true)"
 export DBUS_SESSION_BUS_ADDRESS="${SESSION_BUS_ADDR}"
 unset DBUS_SYSTEM_BUS_ADDRESS || true
 
-# Wait for the socket so Chromium doesn't race it
 for _ in $(seq 1 50); do
   [[ -S "${SESSION_SOCK}" ]] && break
   sleep 0.1
 done
 
-# Fallback: if socket wasn't created, retry without pidfile
 if [[ ! -S "${SESSION_SOCK}" ]]; then
   log "WARNING: DBus session socket not created (retrying without --pidfile)."
   rm -f "${SESSION_SOCK}" "${SESSION_PIDFILE}" >/dev/null 2>&1 || true
@@ -123,7 +122,6 @@ if [[ ! -S "${SESSION_SOCK}" ]]; then
     --fork \
     >>"${DBUS_LOG}" 2>&1 || true
 
-  # Wait again
   for _ in $(seq 1 50); do
     [[ -S "${SESSION_SOCK}" ]] && break
     sleep 0.1
@@ -159,7 +157,6 @@ fi
 
 VNC_SECURITY_ARGS=()
 if [[ "${ACCESS_MODE}" == "standalone" ]]; then
-  # Standalone: protect VNC with password unless "none"
   if [[ -n "${VNC_PASSWORD}" && "${VNC_PASSWORD}" != "none" ]]; then
     printf '%s\n' "${VNC_PASSWORD}" | vncpasswd -f > "${VNC_PASS_FILE}"
     chmod 600 "${VNC_PASS_FILE}"
@@ -170,13 +167,18 @@ if [[ "${ACCESS_MODE}" == "standalone" ]]; then
     log "Xvnc: NO VNC authentication (standalone, not recommended)"
   fi
 else
-  # GNS3: let GNS3 manage console access; keep container auth off
   VNC_SECURITY_ARGS=( -SecurityTypes None )
   log "Xvnc: GNS3 mode (no container-level VNC auth)"
 fi
 
 log "Starting Xvnc on ${DISPLAY} (port 5900) ${SCREEN_WIDTH}x${SCREEN_HEIGHT}x${SCREEN_DEPTH}"
+log "Xvnc bind address: ${VNC_BIND_ADDRESS}"
+
+# NEW: force bind to 0.0.0.0 (or user override)
+# Note: TigerVNC's Xvnc supports -interface on many builds. If your build doesn't,
+# it will log an error in /tmp/xvnc.log and the container will exit (good signal).
 Xvnc "${DISPLAY}" \
+  -interface "${VNC_BIND_ADDRESS}" \
   -rfbport 5900 \
   -geometry "${SCREEN_WIDTH}x${SCREEN_HEIGHT}" \
   -depth "${SCREEN_DEPTH}" \
@@ -189,6 +191,13 @@ for _ in $(seq 1 80); do
   xdpyinfo -display "${DISPLAY}" >/dev/null 2>&1 && break || true
   sleep 0.1
 done
+
+# If X didn't come up, dump Xvnc log and fail fast
+if ! xdpyinfo -display "${DISPLAY}" >/dev/null 2>&1; then
+  log "ERROR: X display did not become ready. Xvnc log (last 120 lines):"
+  tail -n 120 "${XVNC_LOG}" || true
+  exit 1
+fi
 
 # ----------------------------------------------------------------------
 # Start Fluxbox on Xvnc display
@@ -213,16 +222,13 @@ CHROME_FLAGS=(
   --no-default-browser-check
   --disable-translate
 
-  # Avoid Vulkan paths
   --disable-features=TranslateUI,Vulkan,UseSkiaRenderer
 
-  # Container stability
   --no-sandbox
   --disable-setuid-sandbox
   --disable-dev-shm-usage
   --password-store=basic
 
-  # Rendering stability on virtual X server (no GPU)
   --disable-gpu
   --disable-vulkan
   --use-gl=swiftshader
@@ -232,7 +238,6 @@ CHROME_FLAGS=(
 
   --user-data-dir="${PROFILE_DIR}"
 
-  # Reduce crash UX noise
   --disable-breakpad
   --disable-crash-reporter
   --disable-session-crashed-bubble
@@ -269,7 +274,6 @@ start_chromium_watchdog() {
     CHROME_PID=$!
     wait "${CHROME_PID}" || true
 
-    # Helpful hint (keeps debugging local, not forever spammy)
     log "Chromium exited (PID ${CHROME_PID}). Last 40 lines of ${CHROME_LOG}:"
     tail -n 40 "${CHROME_LOG}" || true
 
@@ -320,8 +324,8 @@ if [[ "${ACCESS_MODE}" == "standalone" && "${NOVNC_ENABLE}" == "true" ]]; then
   [[ -d "${NOVNC_WEB}" ]] || NOVNC_WEB="/usr/share/webapps/novnc"
 
   if [[ -d "${NOVNC_WEB}" ]]; then
-    log "Starting noVNC on http://0.0.0.0:6080 (proxy to :5900) using ${NOVNC_WEB}"
-    websockify --web "${NOVNC_WEB}" 0.0.0.0:6080 127.0.0.1:5900 &
+    log "Starting noVNC on http://${VNC_BIND_ADDRESS}:6080 (proxy to :5900) using ${NOVNC_WEB}"
+    websockify --web "${NOVNC_WEB}" "${VNC_BIND_ADDRESS}":6080 127.0.0.1:5900 &
     WEBSOCKIFY_PID=$!
   else
     log "noVNC web root not found; skipping noVNC"
@@ -331,8 +335,8 @@ else
 fi
 
 log "Kiosk is running."
-log "  VNC:   localhost:5900 (DISPLAY ${DISPLAY})"
-log "  noVNC: http://localhost:6080 (standalone only)"
+log "  VNC:   ${VNC_BIND_ADDRESS}:5900 (DISPLAY ${DISPLAY})"
+log "  noVNC: http://${VNC_BIND_ADDRESS}:6080 (standalone only)"
 log "  Chromium log: ${CHROME_LOG}"
 log "  Fluxbox log:  ${FLUX_LOG}"
 log "  Xvnc log:     ${XVNC_LOG}"
