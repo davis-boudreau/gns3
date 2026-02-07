@@ -1,34 +1,25 @@
-services:
-  kiosk:
-    # Default (dev): build locally from repo
-    build: .
-    image: alpine-chromium-kiosk:dev
-    container_name: alpine-chromium-kiosk
-    env_file:
-      - kiosk.env
-    ports:
-      - "5900:5900"   # VNC (Xvnc)
-      - "6080:6080"   # noVNC (optional, standalone only)
-    shm_size: "512m"
-    restart: "no"
-    volumes:
-      - kiosk-home:/home/app
-    profiles: ["dev"]
+version: '3.8'
 
-  kiosk-hub:
-    # Hub: pull from Docker Hub (no build)
-    image: davis-boudreau/alpine-chromium-kiosk:latest
-    container_name: alpine-chromium-kiosk
-    env_file:
-      - kiosk.env
+services:
+  chromium-kiosk:
+    build: .
+    image: alpine-chromium-kiosk:latest
+    container_name: chromium_kiosk
+    # Required for Chromium to not crash
+    shm_size: '2gb'
+    environment:
+      - DISPLAY=:1
+      - HOME=/home/app
     ports:
-      - "5900:5900"   # VNC (Xvnc)
-      - "6080:6080"   # noVNC (optional, standalone only)
-    shm_size: "512m"
-    restart: "no"
+      - "5900:5900"
     volumes:
-      - kiosk-home:/home/app
-    profiles: ["hub"]
+      # Use a named volume to fix the permission issues you had earlier
+      - chromium_data:/tmp/chromium-profile
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+    restart: unless-stopped
 
 volumes:
-  kiosk-home:
+  chromium_data:

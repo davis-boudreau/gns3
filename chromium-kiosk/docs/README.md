@@ -1,252 +1,224 @@
-# Alpine Chromium Kiosk (VNC / noVNC)
+## 📤 Publishing the Image to Docker Hub
 
-A **containerized Chromium kiosk** built on Alpine Linux using:
+This project is designed so the **same container image** can be:
 
-* **TigerVNC (Xvnc)** — virtual X server + VNC in one process
-* **Fluxbox** — lightweight window manager
-* **Chromium** — kiosk-mode browser with watchdog + idle reset
-* **noVNC (optional)** — browser-based VNC access
+* built locally for development, **or**
+* pulled from Docker Hub and run without source code
 
-This project is designed for **teaching containers, ports, and runtime configuration** as well as for real kiosk deployments.
+Publishing to Docker Hub turns your container into a **distributable artifact**, not just a dev tool.
 
 ---
 
-## 🧠 Architecture Overview (Mental Model)
+### 🧠 Conceptual Model (Important)
 
-> **Dockerfile** = *what the system is*
-> **Image** = *a sealed appliance*
-> **Compose** = *how the appliance is plugged into the host*
+> **GitHub** stores source code
+> **Docker Hub** stores built images
+> **Compose / Docker Run** consumes images
 
-If ports are not published, the kiosk **will run but be unreachable**.
+Once an image is on Docker Hub:
+
+* users do **not** need the repository
+* users do **not** need the Dockerfile
+* only **ports + environment variables** matter
+
+This is how containers are used in the real world.
 
 ---
 
-## 🚀 Quick Start
+## 1️⃣ One-Time Setup (Per Machine)
 
-### Option 1 — Dev Mode (build from local source)
+### Create a Docker Hub account
 
-```bash
-make dev
+[https://hub.docker.com](https://hub.docker.com)
+
+Your Docker Hub username becomes part of the image name:
+
+```text
+<dockerhub-username>/alpine-chromium-kiosk
 ```
 
-### Option 2 — Hub Mode (pull from Docker Hub)
+---
+
+### Log in from the CLI
+
+```bash
+docker login
+```
+
+> ⚠️ If you use MFA, create a **Docker Hub access token** and use it as your password.
+
+Verify login:
+
+```bash
+docker info | grep Username
+```
+
+---
+
+## 2️⃣ Build the Image Locally
+
+From the **root of the repository**:
+
+```bash
+docker build -t alpine-chromium-kiosk:latest .
+```
+
+This creates a **local image** only.
+
+---
+
+## 3️⃣ Tag the Image for Docker Hub
+
+Docker Hub requires the image name format:
+
+```text
+<username>/<repository>:<tag>
+```
+
+Tag your local image:
+
+```bash
+docker tag alpine-chromium-kiosk:latest \
+  yourdockerhubuser/alpine-chromium-kiosk:latest
+```
+
+Confirm:
+
+```bash
+docker images | grep alpine-chromium-kiosk
+```
+
+You should see **two tags pointing to the same image ID**.
+
+---
+
+## 4️⃣ Push the Image to Docker Hub
+
+```bash
+docker push yourdockerhubuser/alpine-chromium-kiosk:latest
+```
+
+When complete:
+
+* visit Docker Hub
+* confirm the repository exists
+* confirm the `latest` tag is visible
+
+---
+
+## 5️⃣ Test the Published Image (Critical Step)
+
+Always test the **pulled image**, not your local build.
+
+Remove local copies:
+
+```bash
+docker rmi alpine-chromium-kiosk:latest
+docker rmi yourdockerhubuser/alpine-chromium-kiosk:latest
+```
+
+Now run using the **Hub profile**:
 
 ```bash
 make hub
 ```
 
-### Connect
+If VNC works now, your image is:
 
-* **VNC:** `localhost:5900`
-* **noVNC:** `http://localhost:6080`
-  *(only when `ACCESS_MODE=standalone` and `NOVNC_ENABLE=true`)*
-
----
-
-## 🧩 Compose Profiles (Dev vs Hub)
-
-This project uses **Docker Compose profiles** so we can use **one compose file** for two workflows.
-
-### Profiles
-
-| Profile | What it does                                  |
-| ------- | --------------------------------------------- |
-| `dev`   | Builds the image locally from this repository |
-| `hub`   | Pulls a pre-built image from Docker Hub       |
-
-### Why profiles matter
-
-* Students **don’t need the source code** to run the kiosk
-* Instructors can **guarantee image parity**
-* Avoids “it worked on my machine” problems
+* self-contained
+* portable
+* correctly published
 
 ---
 
-## 📦 `docker-compose.yml` (Conceptual)
+## 6️⃣ Versioned Tags (Recommended Best Practice)
+
+Avoid relying only on `latest`.
+
+Tag releases explicitly:
+
+```bash
+docker tag alpine-chromium-kiosk:latest \
+  yourdockerhubuser/alpine-chromium-kiosk:1.0.0
+
+docker push yourdockerhubuser/alpine-chromium-kiosk:1.0.0
+```
+
+Then pin the version in Compose:
 
 ```yaml
-services:
-  kiosk:        # dev profile → build from repo
-  kiosk-hub:    # hub profile → pull from Docker Hub
+image: yourdockerhubuser/alpine-chromium-kiosk:1.0.0
 ```
 
-Only **one service runs at a time**, but both share:
+This prevents:
 
-* the same container name
-* the same ports
-* the same volume
-* the same environment variables
+* unexpected breaking changes
+* “it worked last week” problems in labs
 
 ---
 
-## 🔌 Ports Explained (Most Common Failure Point)
+## 7️⃣ Publishing via Makefile (Recommended)
 
-### Inside the container
+The included `Makefile` provides a simple CI-style workflow.
 
-| Service            | Port |
-| ------------------ | ---- |
-| Xvnc (VNC server)  | 5900 |
-| noVNC / websockify | 6080 |
-
-### Published to the host
-
-```yaml
-ports:
-  - "5900:5900"
-  - "6080:6080"
-```
-
-> ⚠️ **Important**
->
-> `EXPOSE 5900` in the Dockerfile **does not make the port reachable**.
-> Ports are only reachable when explicitly **published** using:
->
-> * `ports:` in Compose
-> * `-p` in `docker run`
-
-This is the #1 reason containers “work” but cannot be connected to.
-
----
-
-## 🔁 Host ↔ Container Port Flow
-
-```text
-VNC Client (Student)
-        |
-        |  TCP 5900
-        v
-Host OS (Windows / Linux / macOS)
-        |
-        |  docker port publish (-p 5900:5900)
-        v
-Docker Engine
-        |
-        |  container port 5900
-        v
-Xvnc (TigerVNC)
-        |
-        v
-Fluxbox → Chromium (Kiosk)
-```
-
-For noVNC:
-
-```text
-Browser → http://localhost:6080 → websockify → Xvnc
-```
-
----
-
-## ⚙️ Environment Configuration (`kiosk.env`)
-
-Behavior is controlled **at runtime**, not build time.
-
-Common variables:
-
-```env
-ACCESS_MODE=standalone     # or gns3
-VNC_PASSWORD=changeme
-NOVNC_ENABLE=true
-KIOSK_URL=https://www.google.com
-```
-
-Why this matters:
-
-* Same image, different behavior
-* Safe for labs
-* No rebuilds required
-
----
-
-## 🧪 Makefile Commands
-
-| Command      | Purpose                                |
-| ------------ | -------------------------------------- |
-| `make dev`   | Build locally and run                  |
-| `make hub`   | Pull from Docker Hub and run           |
-| `make logs`  | Follow container logs                  |
-| `make ports` | Show published ports                   |
-| `make shell` | Shell into container                   |
-| `make down`  | Stop container                         |
-| `make reset` | Stop + delete container **and volume** |
-
----
-
-## 🧯 Troubleshooting
-
-### ❌ “VNC won’t connect”
-
-Check ports:
+### Publish an image
 
 ```bash
-make ports
+make publish VERSION=1.0.0
 ```
 
-Expected:
+This runs:
 
-```text
-5900/tcp -> 0.0.0.0:5900
-6080/tcp -> 0.0.0.0:6080
-```
+1. `docker build`
+2. `docker tag`
+3. `docker push`
 
-If empty → ports are not published.
+Using Make reinforces:
+
+* repeatability
+* standard workflows
+* separation of concerns
 
 ---
 
-### ❌ Container runs but no display
+## 8️⃣ Common Publishing Mistakes (and Why)
 
-Check logs:
+### ❌ “It works locally but not from Docker Hub”
 
-```bash
-make logs
-```
+Cause:
 
-Then:
+* image depended on bind-mounted files
+* `.dockerignore` excluded required scripts
+* ENTRYPOINT not copied correctly
 
-```bash
-docker exec -it alpine-chromium-kiosk ss -lntp
-```
+Fix:
 
-Ensure Xvnc is listening on:
-
-```text
-0.0.0.0:5900
-```
+* always test **after pulling**
 
 ---
 
-### ❌ noVNC page loads but shows black screen
+### ❌ “Ports are exposed but unreachable”
 
-Confirm:
+Cause:
 
-* `ACCESS_MODE=standalone`
-* `NOVNC_ENABLE=true`
-* Xvnc is running
+* `EXPOSE` in Dockerfile
+* but **no published ports at runtime**
 
----
+Fix:
 
-## 🎓 Teaching Takeaways
-
-Students learn:
-
-* Difference between **EXPOSE vs published ports**
-* Immutable images vs runtime configuration
-* Why Compose exists
-* How real kiosk containers are deployed
-* Why “it’s running” ≠ “it’s reachable”
+* always use `ports:` (Compose) or `-p` (docker run)
 
 ---
 
-## ✅ Summary
+### ❌ “Students can’t push images”
 
-This repository demonstrates **real-world container design**:
+Cause:
 
-* One image
-* Multiple deployment modes
-* Explicit networking
-* Clear separation of build vs run
-* Deterministic behavior across environments
+* MFA enabled
+* password used instead of access token
 
-If you can run this kiosk correctly, you understand **Docker networking fundamentals**.
+Fix:
+
+* use Docker Hub access tokens
 
 ---
