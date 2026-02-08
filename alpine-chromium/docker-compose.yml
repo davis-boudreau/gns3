@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  chromium-kiosk:
+    build: .
+    image: alpine-chromium:latest
+    container_name: alpine-chromium
+    shm_size: '2gb'
+    env_file:
+      - chromium.env
+    environment:
+      - DISPLAY=:1
+      - HOME=/home/app
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null
+      - CHROME_LOG_FILE=/dev/null
+    ports:
+      - "5900:5900"  # Raw VNC
+      - "8080:8080"  # noVNC (Web Browser Access)
+    volumes:
+      - chromium_data:/tmp/chromium-profile
+    restart: unless-stopped
+
+volumes:
+  chromium_data:
