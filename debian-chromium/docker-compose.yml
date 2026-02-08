@@ -1,0 +1,48 @@
+services:
+  chromium-webgl:
+    build: .
+    image: debian-chromium-webgl
+    container_name: chromium_v2
+    
+    # --- CRITICAL FOR WEBGL PERFORMANCE ---
+    shm_size: '2gb' 
+    
+   # --- PORTS ---
+    ports:
+      - "8080:8080" # Access via http://localhost:8080
+      - "5900:5900" # Access via VNC Client
+    
+    # --- CONFIGURATION ---
+    environment:
+      # Access Control: 'standalone' (uses password) or 'gns3' (no password)
+      - ACCESS_MODE=standalone
+      
+      # Browser Mode: 'kiosk' (no UI) or 'full' (standard browser with sidebar)
+      - BROWSER_MODE=full
+      
+      # The website to load on startup
+      - DEFAULT_URL=https://www.bing.com/maps
+      
+      # Security: Password for the noVNC login page
+      - VNC_PASSWORD=password123
+      
+      # Screen Settings
+      - SCREEN_WIDTH=1366
+      - SCREEN_HEIGHT=768
+      - SCREEN_DEPTH=24
+      
+      # Inactivity Reset: 0 to disable, or number of seconds (e.g., 300 for 5 mins)
+      - IDLE_TIMEOUT_SECONDS=300
+      
+      # Enable/Disable the Web Interface
+      - NOVNC_ENABLE=true
+
+    # --- RELIABILITY ---
+    restart: unless-stopped
+    
+    # Optional: Log size management to prevent disk fill-up
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

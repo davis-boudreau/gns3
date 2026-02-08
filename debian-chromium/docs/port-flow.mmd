@@ -1,0 +1,16 @@
+flowchart LR
+  Student[Student VNC Client<br/>RealVNC / TightVNC] -->|TCP 5900| Host[Host Machine<br/>Windows / macOS / Linux]
+  Browser[Web Browser<br/>for noVNC] -->|HTTP 6080| Host
+
+  Host -->|Port Publish -p 5900:5900| Docker[Docker Engine]
+  Host -->|Port Publish -p 6080:6080| Docker
+
+  Docker -->|container:5900| C[Container: alpine-chromium-kiosk]
+  Docker -->|container:6080| C
+
+  C -->|Xvnc listens| VNC[Xvnc Server<br/>0.0.0.0:5900]
+  C -->|websockify serves| NOVNC[noVNC/websockify<br/>0.0.0.0:6080]
+
+  VNC -->|renders| X[Virtual X Display<br/>:1]
+  X --> Flux[Fluxbox WM]
+  Flux --> Chrome[Chromium Kiosk]
