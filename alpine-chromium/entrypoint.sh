@@ -6,7 +6,7 @@ BROWSER_MODE=${BROWSER_MODE:-kiosk}
 SCREEN_WIDTH=${SCREEN_WIDTH:-1366}
 SCREEN_HEIGHT=${SCREEN_HEIGHT:-768}
 SCREEN_DEPTH=${SCREEN_DEPTH:-24}
-KIOSK_URL=${KIOSK_URL:-https://www.google.com}
+DEFAULT_URL=${DEFAULT_URL:-https://www.google.com}
 VNC_PASSWORD=${VNC_PASSWORD:-password}
 NOVNC_ENABLE=${NOVNC_ENABLE:-true}
 IDLE_TIMEOUT_SECONDS=${IDLE_TIMEOUT_SECONDS:-0} # 0 = disabled
@@ -77,10 +77,23 @@ fi
 # --- 7. Start Window Manager ---
 sudo -u app fluxbox > /tmp/fluxbox.log 2>&1 &
 
-# --- 8. Start Chromium with Watchdog ---
-# --test-type hides the --no-sandbox warning bar
-CHROME_ARGS="--no-first-run --no-default-browser-check --user-data-dir=/tmp/chromium-profile --no-sandbox --test-type --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --disable-features=Vulkan,VulkanFromANGLE,Libvulkan --use-gl=swiftshader"
+# --- 8. Start Chromium with Forced WebGL ---
+CHROME_ARGS="--no-first-run \
+--no-default-browser-check \
+--user-data-dir=/tmp/chromium-profile \
+--no-sandbox \
+--test-type \
+--disable-dev-shm-usage \
+--ignore-gpu-blocklist \
+--enable-webgl \
+--enable-webgl2 \
+--enable-es3-apis \
+--use-gl=angle \
+--use-angle=swiftshader \
+--override-use-software-gl-for-webgl \
+--disable-features=Vulkan,VulkanFromANGLE,Libvulkan"
 
+# Add the mode-specific flags
 if [ "$BROWSER_MODE" = "kiosk" ]; then
     CHROME_ARGS="$CHROME_ARGS --kiosk"
 else
@@ -109,7 +122,7 @@ fi
 (
     while true; do
         echo "LOG: Launching Chromium..."
-        sudo -u app /usr/lib/chromium/chromium $CHROME_ARGS "$KIOSK_URL" > /tmp/chromium.log 2>&1
+        sudo -u app /usr/lib/chromium/chromium $CHROME_ARGS "$DEFAULT_URL" > /tmp/chromium.log 2>&1
         echo "LOG: Chromium exited. Restarting in 3 seconds..."
         sleep 3
     done
