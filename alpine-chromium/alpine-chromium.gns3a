@@ -1,0 +1,23 @@
+{
+  "appliance_id": "6c5e082a-08f1-4133-8a2b-28cd51cc3194",
+  "name": "Chromium Browser",
+  "category": "guest",
+  "description": "A lighweight Alpine Linux with chromium browser only.  Great for testing and educational labs.",
+  "vendor_name": "davtronics",
+  "vendor_url": "https://hub.docker.com/r/davisboudreau/alpine-chromium",
+  "vendor_logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/28/Chromium_Logo.svg",
+  "product_name": "Chromium on Alpine Linux",
+  "usage": "\n\nOverview:\nThis container has 2 access modes:\n1)gns3\n2)standalone\n\nIn addition, chromium has 2 modes:\n1)kiosk\n2)Full\n\nGNS3 mode is the correct mode when using this container for GNS3 projects.\nStandalon mode is when running this container using docker desktop or outside of the GNS3 application.\nKiosk mode will disable the chromium controls and load the URL in full screen mode just like a kiosk.\nFull mode will enable all UI controls, providing a normal web browser experience.\n\nEnvironment Variables (Required):\n\nACCESS_MODE=gns3\nBROWSER_MODE=full\nDEFAULT_URL_URL=https://www.bing.com\nSCREEN_WIDTH=1920\nSCREEN_HEIGHT=1080\nVNC_PASSWORD=mylabpass\nNOVNC_ENABLE=true\n\n Network Configuration (Required):\n\nConfigure Network Under Node Properties\nUnder Network configuration, Select Edit\nRemove the comment # from either the DHCP or Static template IPv4 configuration.\n\nFor more information visit the Github project at https://github.com/davis-boudreau/gns3/tree/main/alpine-chromium",
+  "registry_version": 4,
+  "status": "stable",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davisboudreau88@gmail.com",
+  "symbol": "Chromium_Logo.svg",
+  "docker": {
+     "adapters": 1,
+     "image": "davisboudreau/alpine-chromium:latest",
+     "console_type": "vnc",
+     "start_command": "sleep infinity",
+     "environment": "ACCESS_MODE=gns3\nSCREEN_WIDTH=1920\nSCREEN_HEIGHT=1080\nBROWSER_MODE=full\nDEFAULT_URL=https://www.bing.com\nVNC_PASSWORD=mylabpass\nNOVNC_ENABLE=true"
+   }
+}
