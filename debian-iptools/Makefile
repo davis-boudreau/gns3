@@ -1,81 +1,49 @@
-# ========= Configuration =========
+-include .env
+
+# Local build variables
 IMAGE_NAME ?= iptoolkit
 IMAGE_TAG  ?= debian-slim
-PLATFORM   ?= linux/amd64
-REGISTRY   ?=			 # e.g., ghcr.io/your-org OR docker.io/youruser
-PUSH_NAME  ?= $(if $(REGISTRY),$(REGISTRY)/$(IMAGE_NAME),$(IMAGE_NAME))
+PROJECT    ?= iptoolkit
 
-# Multi-arch (optional): set to "linux/amd64,linux/arm64" and use buildx targets
-PLATFORMS  ?= $(PLATFORM)
+# Publishing variables
+export HUB_IMAGE := davisboudreau/debian-iptools
+export VERSION   ?= latest
 
-# Compose project name
-PROJECT	   ?= iptoolkit
+.PHONY: build run shell up down logs clean help tag push publish
 
-# ========= Phony targets =========
-.PHONY: all build buildx run shell stop logs push tag latest clean prune compose-up compose-down
+help:
+	@echo "Usage: make [target]"
+	@echo "  build   Build local image ($(IMAGE_NAME):$(IMAGE_TAG))"
+	@echo "  publish Build, tag, and push to $(HUB_IMAGE):$(VERSION)"
+	@echo "  up      Start toolkit (default profile)"
 
-all: build
-
-# Build using local docker (single arch)
 build:
-	docker build --pull -t $(IMAGE_NAME):$(IMAGE_TAG) .
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
-# Build multi-arch with buildx (requires: docker buildx create/use)
-buildx:
-	docker buildx build \
-	--platform $(PLATFORMS) \
-	-t $(PUSH_NAME):$(IMAGE_TAG) \
-	--pull \
-	--push \
-	.
-# Tag image for registry (no push)
+# Tag the local build with the Hub name and version
 tag:
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(PUSH_NAME):$(IMAGE_TAG)
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(HUB_IMAGE):$(VERSION)
 
-# Push (single-arch): make sure you've run `make tag` first or use same local name/registry
 push:
-	docker push $(PUSH_NAME):$(IMAGE_TAG)
+	docker push $(HUB_IMAGE):$(VERSION)
 
-# Optional convenience: also tag as latest and push
-latest:
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(PUSH_NAME):latest
-	docker push $(PUSH_NAME):latest
+# The full publishing pipeline
+publish: build tag push
+	@echo "Successfully published $(HUB_IMAGE):$(VERSION)"
 
-# Run with sensible defaults (host net + caps)
-run:
-	docker run -it --rm \
-	--name $(PROJECT) \
-	--net=host \
-	--cap-add=NET_ADMIN --cap-add=NET_RAW \
-	-v vnstat-db:/var/lib/vnstat \
-	-v $(PWD)/work:/work \
-	$(IMAGE_NAME):$(IMAGE_TAG) /bin/bash
+# --- Execution Targets ---
+up:
+	docker compose --profile default up -d
 
-# Quick interactive shell into a currently running container
+up-all:
+	docker compose --profile default --profile perf --profile capture --profile chaos up -d
+
 shell:
-	docker exec -it $(PROJECT) /bin/bash || \
-	docker compose exec iptoolkit /bin/bash
+	docker exec -it $(PROJECT) /bin/bash
 
-# Compose: up/down (default profile)
-compose-up:
-	docker compose --project-name $(PROJECT) up -d
-
-compose-down:
-	docker compose --project-name $(PROJECT) down
-
-# Logs (follow)
-logs:
-	docker compose --project-name $(PROJECT) logs -f
-
-# Stop & clean local image/container
-stop:
-	-docker stop $(PROJECT) 2>/dev/null || true
-	-docker rm $(PROJECT) 2>/dev/null || true
+down:
+	docker compose --profile default --profile perf --profile capture --profile chaos down
 
 clean:
-	-docker rmi $(IMAGE_NAME):$(IMAGE_TAG) 2>/dev/null || true
-	-docker rmi $(PUSH_NAME):$(IMAGE_TAG) 2>/dev/null || true
-
-# Danger zone: prune dangling images/volumes
-prune:
-	docker system prune -f
+	docker rmi $(IMAGE_NAME):$(IMAGE_TAG) || true
+	docker rmi $(HUB_IMAGE):$(VERSION) || true

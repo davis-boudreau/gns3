@@ -1,61 +1,47 @@
-# Uses env vars from .env (see sample below)
-# Primary toolbox container runs with host networking and capture capabilities.
 services:
+  # Primary interactive toolbox
   iptoolkit:
     container_name: iptoolkit
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        # Example build arguments (must be key: value)
-        # Only include keys you actually use in your Dockerfile via ARG
         HTTP_PROXY: "${HTTP_PROXY:-}"
         HTTPS_PROXY: "${HTTPS_PROXY:-}"
-        NO_PROXY: "${NO_PROXY:-}"
-    image: "${IMAGE_NAME:-iptoolkit}:${IMAGE_TAG:-debian-slim}"
+    image: debian-iptools:latest
     hostname: "${HOSTNAME_OVERRIDE:-iptoolkit}"
-    environment:
-      TZ: "${TZ:-UTC}"
-      TERM: xterm-256color
-    # Host networking gives best visibility for tcpdump/tshark/iftop/nethogs
     network_mode: "host"
     cap_add:
       - NET_ADMIN
       - NET_RAW
-      # SYS_MODULE can be omitted in many cases; add only if you need it.
-      # - SYS_MODULE
-    # Run as root for full capabilities; comment out to drop privileges
-    user: "0:0"
+    environment:
+      TZ: "${TZ:-UTC}"
+      TERM: xterm-256color
     volumes:
-      # Persist vnstat DB (bandwidth history)
       - vnstat-db:/var/lib/vnstat
-      # Optional: shared directory on host for pcaps, reports, etc.
       - ./work:/work
-    # Healthcheck is a lightweight network reachability probe
     healthcheck:
       test: ["CMD-SHELL", "ping -c1 8.8.8.8 >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
-    # Keep container open with an interactive shell by default
     stdin_open: true
     tty: true
     restart: unless-stopped
     profiles: ["default"]
 
-  # Optional: iperf3 server service for instant throughput testing
+  # Background iperf3 server
   iperf3-server:
     container_name: iperf3-server
     image: "${IMAGE_NAME:-iptoolkit}:${IMAGE_TAG:-debian-slim}"
     network_mode: "host"
     cap_add:
       - NET_ADMIN
-      - NET_RAW
     command: ["iperf3", "-s", "-p", "${IPERF_PORT:-5201}"]
     restart: unless-stopped
     profiles: ["perf"]
 
-  # Optional: tshark capture service that writes rotating pcaps to ./captures
+  # Continuous background capture
   tshark-capture:
     container_name: tshark-capture
     image: "${IMAGE_NAME:-iptoolkit}:${IMAGE_TAG:-debian-slim}"
@@ -63,8 +49,6 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_RAW
-    user: "0:0"
-    # Example: capture on interface 'any', rotate every 100 MB, keep 10 files
     command:
       [
         "tshark",
@@ -80,4 +64,3 @@ services:
 
 volumes:
   vnstat-db:
-    name: vnstat-db

@@ -1,0 +1,23 @@
+{
+  "appliance_id": "b20d3965-53f7-4e92-a029-4e0f4f64ef3b",
+  "name": "IP Toolkit (Debian)",
+  "category": "guest",
+  "description": "A comprehensive network troubleshooting and testing toolkit based on Debian Slim. Includes tshark, nmap, iperf3, and advanced traffic control tools.",
+  "vendor_name": "davtronics",
+  "vendor_url": "https://hub.docker.com/r/davisboudreau/debian-iptools",
+  "vendor_logo_url": "https://www.debian.org/logos/openlogo-nd.svg",
+  "product_name": "IP Toolkit on Debian Slim",
+  "usage": "\n\nOverview:\nThis container is designed for deep packet inspection, performance testing, and network stress testing within GNS3.\n\nKey Features:\n- Layer 2/3: iproute2, arping, nmap, hping3\n- Performance: iperf3, nuttcp, fping\n- Analysis: tshark, tcpdump, ngrep\n- Chaos: tc (traffic control) for simulating latency/loss\n\nGNS3 Usage:\n1) Drag the node into your topology.\n2) Right-click > Console to access the bash shell.\n3) Use './work/netsaver.sh' for a quick interface health check.\n\nEnvironment Variables:\nTZ=UTC\nTERM=xterm-256color\nCAP_IFACE=any\nIPERF_PORT=5201\n\nNetwork Configuration:\nTo use advanced tools like arping or tshark on specific segments, ensure the GNS3 node has the 'Auxiliary console' or 'Telnet' console type selected. Network interfaces should be configured via the GNS3 node properties (Edit Config).\n\nFor more information visit the Github project at https://github.com/davis-boudreau/gns3",
+  "registry_version": 4,
+  "status": "stable",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davisboudreau88@gmail.com",
+  "symbol": "terminal_icon.svg",
+  "docker": {
+    "adapters": 1,
+    "image": "davisboudreau/debian-iptools:latest",
+    "console_type": "telnet",
+    "start_command": "sleep infinity",
+    "environment": "TZ=UTC\nTERM=xterm-256color\nCAP_IFACE=any\nIPERF_PORT=5201"
+  }
+}

@@ -1,74 +1,33 @@
 # Full IP/Networking Toolkit on Debian Slim
 FROM debian:stable-slim
 
+# Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive \
     TERM=xterm-256color \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
 
-# Update base and install tools
+# Update base and install tools in logical groups
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Core networking + interfaces
-    iproute2 \
-    net-tools \
-    ethtool \
-    iputils-ping \
-    iputils-tracepath \
-    traceroute \
-    mtr-tiny \
-    arping \
-    # DNS / name resolution
-    dnsutils \ 
-    ldnsutils \
-    # HTTP / TLS / API
-    curl \
-    wget \
-    httpie \
-    openssl \
-    # Bandwidth / throughput
-    iperf3 \
-    nuttcp \
-    fping \
-    # Sockets / ports
-    netcat-openbsd \
-    socat \
-    ncat \
-    # Capture & deep inspection
-    tcpdump \
-    tshark \
-    ngrep \
-    # Firewall / NAT / conntrack
-    iptables \
-    nftables \
-    conntrack \
-    # Monitoring
-    iftop \
-    nethogs \
-    bmon \
-    vnstat \
-    # Security / scanning
-    nmap \
-    hping3 \
-    arp-scan \
-    # Wireless (optional; harmless on non-wifi hosts)
-    iw \
-    wavemon \
-    # Utilities
-    jq \
-    rsync \
-    openssh-client \
-    whois \
-    ca-certificates \
-    procps \
-    less \
+    # --- Layer 2 & 3 (Interface/Routing/ARP) ---
+    iproute2 net-tools ethtool iputils-ping iputils-tracepath \
+    traceroute mtr-tiny arping arp-scan iw wavemon \
+    # --- Layer 4 (Transport/Sockets/Perf) ---
+    iperf3 nuttcp fping netcat-openbsd socat ncat \
+    # --- Layer 7 (Application/DNS/Web) ---
+    dnsutils ldnsutils curl wget httpie openssl \
+    # --- Inspection & Analysis (Capture) ---
+    tcpdump tshark ngrep tcpreplay \
+    # --- Security & Firewall ---
+    nmap hping3 iptables nftables conntrack \
+    # --- Monitoring (Real-time) ---
+    iftop nethogs bmon vnstat procps \
+    # --- Utilities & Data Handling ---
+    jq rsync openssh-client whois ca-certificates less \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Optional: create a non-root user for interactive use
-# Uncomment if you want to avoid running as root by default.
-# RUN useradd -m -s /bin/bash netops && \
-#     echo "netops ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/netops
-# USER netops
-# WORKDIR /home/netops
+# Set default working directory
+WORKDIR /work
 
 # Default shell
 CMD ["/bin/bash"]

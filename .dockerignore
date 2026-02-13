@@ -1,0 +1,8 @@
+.git
+.env
+.dockerignore
+work/
+captures/
+Makefile
+*.pcap
+*.log

@@ -1,5 +1,5 @@
 services:
-  chromium-kiosk:
+  alphine-chromium:
     build: .
     image: alpine-chromium:latest
     container_name: alpine-chromium
