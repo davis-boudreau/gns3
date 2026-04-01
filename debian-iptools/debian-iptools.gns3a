@@ -1,5 +1,5 @@
 {
-  "appliance_id": "b20d3965-53f7-4e92-a029-4e0f4f64ef3b",
+  "appliance_id": "3a1b86cd-6d5c-4c1d-bcde-459a6bfaf59a",
   "name": "IP Toolkit (Debian)",
   "category": "guest",
   "description": "A comprehensive network troubleshooting and testing toolkit based on Debian Slim. Includes tshark, nmap, iperf3, and advanced traffic control tools.",

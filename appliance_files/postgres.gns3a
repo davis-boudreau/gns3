@@ -12,7 +12,7 @@
   "status": "stable",
   "maintainer": "Davis Boudreau",
   "maintainer_email": "davisboudreau88@gmail.com",
-  "symbol": "postgresql.svg",
+  "symbol": "postgre.svg",
   "docker": {
     "adapters": 1,
     "image": "postgres:16-alpine",
