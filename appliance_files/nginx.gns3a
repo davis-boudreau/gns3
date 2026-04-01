@@ -1,0 +1,23 @@
+{
+  "appliance_id": "4f7882e5-dee8-49b1-89cc-193cf78ed518",
+  "name": "nginx",
+  "category": "guest",
+  "description": "NGINX (pronounced 'engine-x') is an open-source web server, reverse proxy, load balancer, HTTP cache, and mail proxy server optimized for high performance and scalability.",
+  "vendor_name": "NGINX",
+  "vendor_url": "https://github.com/nginx/nginx",
+  "vendor_logo_url": "https://github.com/nginx/nginx/blob/master/docs/glyphs/SVG/nginx-logo.svg",
+  "product_name": "NGINX Web Server",
+  "usage": "\n\nOverview:\nThis appliance provides a lightweight, production-grade NGINX server for use in GNS3 labs. It is suitable for learning, validating, and demonstrating reverse proxying, load balancing, and web-serving concepts.\n\nKey Features:\n- High-performance HTTP/HTTPS web server\n- Reverse proxy for backend services\n- Layer 7 load balancing\n- Static content hosting\n- TLS termination (with user-provided certificates)\n\nCommon Use Cases in GNS3:\n- Reverse proxy in front of application servers\n- Load balancer for multiple backend nodes\n- Web entry point for simulated enterprise networks\n- Observing HTTP traffic and performance behavior\n\nGNS3 Usage:\n1) Drag the NGINX node into your topology.\n2) Connect it to at least one Ethernet interface.\n3) Right-click > Console to monitor logs (stdout/stderr).\n4) Place custom configs in /etc/nginx/conf.d or mount volumes.\n\nConfiguration Notes:\n- Default NGINX configuration listens on port 80.\n- HTTPS (443) requires custom configuration and certificates.\n- Logs are written to stdout/stderr for GNS3 visibility.\n\nAdditional Resources:\nhttps://nginx.org/en/docs/",
+  "registry_version": 4,
+  "status": "stable",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davisboudreau88@gmail.com",
+  "symbol": "nginx.svg",
+  "docker": {
+    "adapters": 2,
+    "image": "nginx:alpine",
+    "console_type": "telnet",
+    "start_command": "nginx -g 'daemon off;'",
+    "environment": "TZ=UTC\nTERM=xterm-256color"
+  }
+}
