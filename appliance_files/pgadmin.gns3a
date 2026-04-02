@@ -15,7 +15,7 @@
   "symbol": "pgadmin.svg",
   "docker": {
     "adapters": 1,
-    "image": "elestio/pgadmin:REL-9_13",
+    "image": "postgres:14.22-trixie",
     "console_type": "telnet",
     "start_command": "",
     "environment": "PGADMIN_DEFAULT_EMAIL=admin@example.com\nPGADMIN_DEFAULT_PASSWORD=admin\nPGADMIN_LISTEN_PORT=5050\nTZ=UTC\nTERM=xterm-256color"
