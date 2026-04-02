@@ -1,0 +1,23 @@
+{
+  "appliance_id": "9c3e4df1-7f5a-4e20-9f6a-bb6b7c9f1c12",
+  "name": "ubuntu-resolute",
+  "category": "guest",
+  "description": "Ubuntu is a popular Linux distribution based on Debian, widely used for servers, desktops, cloud, and containerized environments.",
+  "vendor_name": "Canonical",
+  "vendor_url": "https://ubuntu.com/",
+  "vendor_logo_url": "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo32.png",
+  "product_name": "Ubuntu Linux (Docker)",
+  "usage": "\n\nOverview:\nThis appliance provides a general-purpose Ubuntu Linux environment running as a Docker container in GNS3. It is ideal for networking labs, service deployment, scripting, and system administration practice.\n\nKey Features:\n- Full Ubuntu userspace\n- APT package management\n- Ideal for servers, tools, and network utilities\n- Lightweight compared to VM-based Ubuntu appliances\n\nCommon Use Cases in GNS3:\n- Linux server or client node\n- Testing routing, firewall, and networking tools\n- Hosting services (web, DNS, DHCP, etc.)\n- Bash scripting and automation labs\n\nGNS3 Usage:\n1) Drag the Ubuntu node into your topology.\n2) Connect one or more Ethernet interfaces as needed.\n3) Right-click > Console to access the shell.\n4) Use apt to install additional tools as required.\n\nConfiguration Notes:\n- The container starts with an interactive bash shell.\n- Networking is provided by GNS3 Docker adapters.\n- Data inside the container is ephemeral unless volumes are used.\n\nAdditional Resources:\nhttps://ubuntu.com/server/docs",
+  "registry_version": 4,
+  "status": "stable",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davisboudreau88@gmail.com",
+  "symbol": "ubuntu.svg",
+  "docker": {
+    "adapters": 2,
+    "image": "ubuntu:resolute-20260401",
+    "console_type": "telnet",
+    "start_command": "/bin/bash",
+    "environment": "TZ=UTC\nTERM=xterm-256color"
+  }
+}
