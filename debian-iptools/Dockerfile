@@ -23,11 +23,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # --- Monitoring (Real-time) ---
     iftop nethogs bmon vnstat procps \
     # --- Utilities & Data Handling ---
-    jq rsync openssh-client whois ca-certificates less \
+    jq rsync openssh-client openssh-server whois ca-certificates less \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Runtime support for inbound SSH access
+RUN mkdir -p /var/run/sshd
 
 # Set default working directory
 WORKDIR /work
 
-# Default shell
-CMD ["/bin/bash"]
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default process when running locally; GNS3 can still override the command.
+CMD ["sleep", "infinity"]

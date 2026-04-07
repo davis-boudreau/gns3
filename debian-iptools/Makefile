@@ -1,7 +1,7 @@
 -include .env
 
 # Local build variables
-IMAGE_NAME ?= iptoolkit
+IMAGE_NAME ?= iptools
 IMAGE_TAG  ?= debian-slim
 PROJECT    ?= iptoolkit
 
@@ -9,7 +9,7 @@ PROJECT    ?= iptoolkit
 export HUB_IMAGE := davisboudreau/debian-iptools
 export VERSION   ?= latest
 
-.PHONY: build run shell up down logs clean help tag push publish
+.PHONY: build run shell up up-all compose-up compose-down down logs clean help tag push publish
 
 help:
 	@echo "Usage: make [target]"
@@ -36,13 +36,17 @@ up:
 	docker compose --profile default up -d
 
 up-all:
-	docker compose --profile default --profile perf --profile capture --profile chaos up -d
+	docker compose --profile default --profile perf --profile capture up -d
+
+compose-up: up
+
+compose-down: down
 
 shell:
 	docker exec -it $(PROJECT) /bin/bash
 
 down:
-	docker compose --profile default --profile perf --profile capture --profile chaos down
+	docker compose --profile default --profile perf --profile capture down
 
 clean:
 	docker rmi $(IMAGE_NAME):$(IMAGE_TAG) || true

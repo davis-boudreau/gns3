@@ -1,0 +1,25 @@
+services:
+  alpine-pgadmin-chromium:
+    build: .
+    image: alpine-pgadmin-chromium:latest
+    container_name: alpine-pgadmin-chromium
+    shm_size: "2gb"
+    env_file:
+      - pgadmin-chromium.env
+    environment:
+      - DISPLAY=:1
+      - HOME=/home/app
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null
+      - CHROME_LOG_FILE=/dev/null
+    ports:
+      - "5900:5900"
+      - "8080:8080"
+      - "5050:5050"
+    volumes:
+      - chromium_data:/tmp/chromium-profile
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+volumes:
+  chromium_data:
+  pgadmin_data:

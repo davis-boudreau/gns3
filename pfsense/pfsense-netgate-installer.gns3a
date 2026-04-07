@@ -1,0 +1,62 @@
+{
+  "appliance_id": "50987cbf-c23e-462c-9100-edb3b57780b5",
+  "name": "pfSense",
+  "category": "firewall",
+  "description": "Boots the Netgate installer ISO and installs pfSense to a blank qcow2 disk using conservative QEMU settings for better install stability in GNS3.",
+  "vendor_name": "Netgate",
+  "vendor_url": "https://www.netgate.com/",
+  "documentation_url": "https://docs.netgate.com/pfsense/en/latest/",
+  "product_name": "pfSense CE / Netgate Installer",
+  "product_url": "https://www.pfsense.org/",
+  "registry_version": 1,
+  "status": "stable",
+  "availability": "free-to-try",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davis.boudreau@nscc.ca",
+  "usage": "\nOverview:\npfSense is being installed from the Netgate installer ISO onto a blank qcow2 disk.\nThis appliance is tuned for install stability first, then for easy post-install conversion to a disk-only runtime.\n\nInstaller Workflow:\n1) Add the appliance to your topology and start it.\n2) Open the VNC console.\n3) Run the installer and accept the default installation options unless your lab needs custom disk layout choices.\n4) Reboot when installation finishes.\n5) Power off the node.\n6) Change the node version from the installer entry to the disk-only entry so the VM boots from the installed disk instead of the ISO.\n7) Start the node again and complete interface assignment.\n\nInterface Notes:\n- This appliance uses Intel E1000 adapters for installer stability.\n- pfSense will usually see the interfaces as em0, em1, em2, and em3.\n- In a typical setup, WAN is em0 and LAN is em1, but confirm this in the console during assignment.\n\nDefault Credentials After Install:\nUsername: admin\nPassword: pfsense\n\nStability Notes:\n- The installer is more reliable with E1000 adapters than VirtIO in some GNS3 and QEMU environments.\n- The disk is attached with a conservative interface for easier installation.\n- After installation, use the disk-only version entry so the VM does not boot back into the installer ISO.\n\nFor more information visit the pfSense documentation at https://docs.netgate.com/pfsense/en/latest/",
+  "symbol": "firewall.svg",
+  "port_name_format": "em{0}",
+  "qemu": {
+    "adapter_type": "e1000",
+    "adapters": 4,
+    "ram": 4096,
+    "cpus": 2,
+    "hda_disk_interface": "ide",
+    "arch": "x86_64",
+    "console_type": "vnc",
+    "boot_priority": "cd",
+    "kvm": "require",
+    "linked_clone": true
+  },
+  "images": [
+    {
+      "filename": "netgate-installer-v1.1.1-RELEASE-amd64.iso",
+      "version": "Installer ISO",
+      "md5sum": "f8a8dbeeada48499423861910168321f",
+      "filesize": 1022812160,
+      "download_url": "https://www.pfsense.org/download/"
+    },
+    {
+      "filename": "pfsense-empty-16G.qcow2",
+      "version": "Base HDA (blank) qcow2",
+      "md5sum": "f692998d6a8ef3970a3aa833070b2a53",
+      "filesize": 196864,
+      "download_url": ""
+    }
+  ],
+  "versions": [
+    {
+      "name": "2.8.0 Installer",
+      "images": {
+        "cdrom_image": "netgate-installer-v1.1.1-RELEASE-amd64.iso",
+        "hda_disk_image": "pfsense-empty-16G.qcow2"
+      }
+    },
+	{
+      "name": "2.8.0 Installed Disk Only",
+      "images": {
+        "hda_disk_image": "pfsense-empty-16G.qcow2"
+      }
+    }
+  ]
+}
