@@ -1,0 +1,23 @@
+{
+  "appliance_id": "f992d5a5-c3f5-47f8-b8ef-8fd8d85c0a45",
+  "name": "pgAdmin Chromium Browser",
+  "category": "guest",
+  "description": "A Chromium VNC browser appliance with an embedded pgAdmin web service for PostgreSQL labs in GNS3.",
+  "vendor_name": "davtronics",
+  "vendor_url": "https://hub.docker.com/r/davisboudreau/alpine-pgadmin-chromium",
+  "vendor_logo_url": "https://www.pgadmin.org/static/img/pgadmin-logo.svg",
+  "product_name": "pgAdmin Chromium Browser",
+  "usage": "\n\nOverview:\nThis appliance starts two things inside one Docker container:\n- pgAdmin web interface on port 5050\n- Chromium desktop session exposed through the GNS3 VNC console\n\nThe intended GNS3 workflow is simple:\n1) Add the appliance to your topology.\n2) Connect it to the same network as the PostgreSQL server you want to manage.\n3) Start the node.\n4) Open the VNC console.\n5) Chromium opens pgAdmin automatically so you can administer PostgreSQL from inside the lab.\n\nRecommended GNS3 Mode:\n- ACCESS_MODE=gns3\n- BROWSER_MODE=full\n- DEFAULT_URL=http://127.0.0.1:5050\n\npgAdmin Variables:\nPGADMIN_DEFAULT_EMAIL=admin@example.com\nPGADMIN_DEFAULT_PASSWORD=admin\nPGADMIN_LISTEN_PORT=5050\nPGADMIN_AUTO_SETUP=true\n\nPreconfigured PostgreSQL Server Variables:\nPGADMIN_SERVER_NAME=Lab PostgreSQL\nPGADMIN_SERVER_GROUP=Servers\nPGADMIN_SERVER_HOST=postgres\nPGADMIN_SERVER_PORT=5432\nPGADMIN_SERVER_MAINTENANCE_DB=postgres\nPGADMIN_SERVER_USERNAME=postgres\nPGADMIN_SERVER_PASSWORD=postgres\nPGADMIN_SERVER_SSLMODE=prefer\n\nChromium and VNC Variables:\nACCESS_MODE=gns3\nBROWSER_MODE=full\nSCREEN_WIDTH=1920\nSCREEN_HEIGHT=1080\nVNC_PASSWORD=mylabpass\nNOVNC_ENABLE=true\nDEFAULT_URL=http://127.0.0.1:5050\n\nNetwork Configuration In GNS3:\nOpen Node Properties, then Network Configuration, then Edit.\nRemove the comment character from either the DHCP or static IPv4 template so the node receives working network settings.\nThe PGADMIN_SERVER_HOST value must match the PostgreSQL server address or DNS name that is reachable from this node.\n\nNotes:\n- In GNS3, the VNC console is the primary way to use this appliance.\n- pgAdmin is also available on TCP port 5050 inside the container.\n- If PGADMIN_AUTO_SETUP=true, the appliance creates a pgAdmin server definition from the environment variables at startup.\n- If the PostgreSQL password changes, update PGADMIN_SERVER_PASSWORD to match.\n\nFor more information visit the Github project at https://github.com/davis-boudreau/gns3/tree/main/alpine-pgadmin-chromium",
+  "registry_version": 4,
+  "status": "experimental",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davisboudreau88@gmail.com",
+  "symbol": "pgadmin.svg",
+  "docker": {
+    "adapters": 1,
+    "image": "davisboudreau/alpine-pgadmin-chromium:latest",
+    "console_type": "vnc",
+    "start_command": "sleep infinity",
+    "environment": "ACCESS_MODE=gns3\nSCREEN_WIDTH=1920\nSCREEN_HEIGHT=1080\nBROWSER_MODE=full\nDEFAULT_URL=http://127.0.0.1:5050\nVNC_PASSWORD=mylabpass\nNOVNC_ENABLE=true\nPGADMIN_DEFAULT_EMAIL=admin@example.com\nPGADMIN_DEFAULT_PASSWORD=admin\nPGADMIN_LISTEN_PORT=5050\nPGADMIN_AUTO_SETUP=true\nPGADMIN_SERVER_NAME=Lab PostgreSQL\nPGADMIN_SERVER_GROUP=Servers\nPGADMIN_SERVER_HOST=postgres\nPGADMIN_SERVER_PORT=5432\nPGADMIN_SERVER_MAINTENANCE_DB=postgres\nPGADMIN_SERVER_USERNAME=postgres\nPGADMIN_SERVER_PASSWORD=postgres\nPGADMIN_SERVER_SSLMODE=prefer"
+  }
+}

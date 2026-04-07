@@ -1,0 +1,23 @@
+{
+  "appliance_id": "4d092fee-14ca-4bd5-a8eb-902699f70868",
+  "name": "PostgreSQL Alpine",
+  "category": "guest",
+  "description": "A lightweight PostgreSQL database appliance based on the official Alpine image for GNS3 labs.",
+  "vendor_name": "davtronics",
+  "vendor_url": "https://hub.docker.com/_/postgres",
+  "vendor_logo_url": "https://www.postgresql.org/media/img/about/press/elephant.png",
+  "product_name": "PostgreSQL on Alpine Linux",
+  "usage": "\n\nOverview:\nThis appliance runs PostgreSQL using the official Alpine-based image, but it is adapted for GNS3 troubleshooting. PostgreSQL is kept running as the long-lived service, and the GNS3 console can provide an Alpine shell for in-node troubleshooting without tearing the database down.\n\nTypical GNS3 Use Cases:\n- Backend database for web or application servers\n- PostgreSQL client and firewall testing\n- SQL practice and schema demonstrations\n- pgAdmin and PostgreSQL connectivity labs\n- Service publishing, NAT, and ACL validation\n\nHow To Use In GNS3:\n1) Drag the appliance into your topology.\n2) Connect it to the network where clients or application servers can reach it.\n3) Start the node.\n4) Open the console to troubleshoot IP connectivity and PostgreSQL readiness from inside the node.\n5) Connect from pgAdmin or another client to the node IP on TCP port 5432.\n\nUseful Commands In The GNS3 Console:\n- ip addr\n- ip route\n- ping <target>\n- pg_isready -U postgres -d postgres\n- psql -U postgres -d postgres\n- tail -f /var/log/postgresql/postgresql.log\n- ss -lntp\n\nDefault Environment Variables:\nPOSTGRES_USER=postgres\nPOSTGRES_PASSWORD=postgres\nPOSTGRES_DB=postgres\nPGDATA=/var/lib/postgresql/data/pgdata\nTZ=UTC\nGNS3_SHELL_MODE=true\n\nNotes For GNS3 Users:\n- PostgreSQL listens on port 5432 inside the container and is forced to listen on all interfaces.\n- PGDATA is set to /var/lib/postgresql/data/pgdata so initialization happens in a subdirectory instead of directly on the Docker mount point.\n- The first boot initializes the database using the configured POSTGRES_* variables.\n- If you change POSTGRES_USER, POSTGRES_PASSWORD, or POSTGRES_DB after the database volume has already been created, PostgreSQL will keep the original initialized values unless you recreate the data volume.\n- Use tail -f /var/log/postgresql/postgresql.log if pgAdmin cannot connect and you want immediate PostgreSQL startup or authentication details.\n- If the console shell is closed, PostgreSQL keeps running until the node is stopped.\n\nFor more information visit the Github project at https://github.com/davis-boudreau/gns3/tree/main/alpine-postgres",
+  "registry_version": 4,
+  "status": "stable",
+  "maintainer": "Davis Boudreau",
+  "maintainer_email": "davisboudreau88@gmail.com",
+  "symbol": "postgres.svg",
+  "docker": {
+    "adapters": 1,
+    "image": "davisboudreau/alpine-postgres:latest",
+    "console_type": "telnet",
+    "start_command": "/bin/sh",
+    "environment": "POSTGRES_USER=postgres\nPOSTGRES_PASSWORD=postgres\nPOSTGRES_DB=postgres\nPGDATA=/var/lib/postgresql/data/pgdata\nTZ=UTC\nGNS3_SHELL_MODE=true"
+  }
+}
